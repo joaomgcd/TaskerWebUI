@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Hello World Edit Task</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <script>
+        alert("Open Tasker > Menu > Preferences > UI > Enable New Tasker UI > Edit a task > Menu on the bottom-left > Enable WebUI.");
+        const url = prompt("What's your Tasker WebUI URL?");
+        fetch(`${url}actions`,
+            {
+                method: "PATCH",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "action": {
+                        "code": 548,
+                        "args": [
+                            {
+                                "id": 0,
+                                "value": "Hello World!"
+                            }
+                        ]
+                    }
+                })
+            }
+        )
+            .then(result => result.json())
+            .then(json => alert(`Flash action created! Your task now has ${json.length} actions!`))
+            .catch(error => alert(`Couldn't create flash action: ${error}`));
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>
