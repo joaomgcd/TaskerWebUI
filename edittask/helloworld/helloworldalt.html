@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Tasker WebUI Helper</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5e6d3;
+            color: #4a4a4a;
+        }
+        h1 {
+            color: #8b572a;
+        }
+        input, button {
+            margin: 10px 0;
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #ffffff;
+            color: #4a4a4a;
+            border: 1px solid #d1c3b4;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #b98d5a;
+            color: #ffffff;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #a67c4e;
+        }
+        #status, #urlStatus {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tasker WebUI Helper</h1>
+    <p>Open Tasker > Menu > Preferences > UI > Enable New Tasker UI > Edit a task > Menu on the bottom-left > Enable WebUI.</p>
+    <form id="taskerForm" onsubmit="sendPatch(); return false;">
+        <input type="text" id="urlInput" placeholder="Enter Tasker WebUI URL or IP">
+        <input type="text" id="flashMessage" placeholder="Enter flash message" value="Hello World!">
+        <button type="submit">SEND</button>
+    </form>
+    <div id="urlStatus" class="info hidden"></div>
+    <div id="status"></div>
+
+    <script>
+        function formatUrl(input) {
+            let url = input.trim();
+            if (!url.includes(':')) {
+                return `http://${url}:8745/`;
+            }
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = `http://${url}`;
+            }
+            const urlObj = new URL(url);
+            if (!urlObj.port) {
+                urlObj.port = '8745';
+            }
+            return urlObj.toString();
+        }
+
+        function sendPatch() {
+            const urlInput = document.getElementById('urlInput');
+            const flashMessageInput = document.getElementById('flashMessage');
+            const statusDiv = document.getElementById('status');
+            const urlStatusDiv = document.getElementById('urlStatus');
+            
+            const url = formatUrl(urlInput.value);
+            const flashMessage = flashMessageInput.value || 'Hello World!';
+
+            urlStatusDiv.textContent = `Sending to Tasker UI server: ${url}`;
+            urlStatusDiv.classList.remove('hidden');
+
+            fetch(`${url}actions`, {
+                method: "PATCH",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "action": {
+                        "code": 548,
+                        "args": [
+                            {
+                                "id": 0,
+                                "value": flashMessage
+                            }
+                        ]
+                    }
+                })
+            })
+            .then(result => result.json())
+            .then(json => {
+                statusDiv.textContent = `Flash action created! Your task now has ${json.length} actions!`;
+                statusDiv.className = 'success';
+            })
+            .catch(error => {
+                statusDiv.textContent = `Couldn't create flash action: ${error}`;
+                statusDiv.className = 'error';
+            });
+        }
+
+        // Add event listeners for Enter key press
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendPatch();
+            }
+        });
+
+        document.getElementById('flashMessage').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendPatch();
+            }
+        });
+    </script>
+</body>
+</html>
